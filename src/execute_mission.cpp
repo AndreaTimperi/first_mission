@@ -15,14 +15,14 @@ using namespace std;
 ros::ServiceClient client;
 std_srvs::Empty srv;
 XmlRpc::XmlRpcValue environment_list, environment_list2, environment_list_push;
-int tyr_dim, tyr_dim2;
+int tyr_dim, tyr_dim2, cnt = 0;
 state_machine_msgs::StateWithInitialState navigation_goal_msg;
 bool moving = false;
 ros::Publisher navigation_goal_pub;
 
 void readCallback(const navigation_manager_msgs::LocalPlannerStatus & msg)
 {
-    if(msg.status == 1)
+    if(msg.status == 1 || cnt == 0)
     {
         // ROS_INFO("Moving to the GOAL");
         moving = true;
@@ -35,6 +35,10 @@ void readCallback(const navigation_manager_msgs::LocalPlannerStatus & msg)
         // It works if an image_view image_saver node is running with the camera_path and the png file name declared
         if(client.call(srv))
             ROS_INFO("Image taken");
+    }
+    if (cnt == 0)
+    {
+        cnt ++;
     }
 }
 
@@ -113,13 +117,16 @@ int main( int argc, char** argv )
 
     int navgoal_num = 0;
     sleep(1);
+    
     while(ros::ok())
     {
-    
-
     if(!moving && navgoal_num < name.size())
     {
         publish_navgoal(name.at(navgoal_num));
+        cout<<"navgoal num"<<endl;
+        cout << navgoal_num << endl; 
+        cout<<"name"<<endl;
+        cout << name.at(navgoal_num) << endl;
         moving = true;
         navgoal_num ++;
     }
