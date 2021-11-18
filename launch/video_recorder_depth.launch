@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+
+  <node name="depth_front" type="video_recorder" pkg="image_view" output="screen" respawn="false">
+    <remap from="image" to="/depth_camera_front/color/image_raw"/>
+    <param name="fps" value="30"/>
+    <param name="filename" value="/home/integration/video/depth_front/mission_1/depth_front.avi"/>
+  </node>
+
+    <node name="depth_rear" type="video_recorder" pkg="image_view" output="screen" respawn="false">
+    <remap from="image" to="/depth_camera_rear/color/image_raw"/>
+    <param name="fps" value="30"/>
+    <param name="filename" value="/home/integration/video/depth_rear/mission_1/depth_rear.avi"/>
+  </node>
+
+    <node name="depth_right" type="video_recorder" pkg="image_view" output="screen" respawn="false">
+    <remap from="image" to="/depth_camera_right/color/image_raw"/>
+    <param name="filename" value="/home/integration/video/depth_right/mission_1/depth_right.avi"/>
+  </node>
+
+    <node name="depth_left" type="video_recorder" pkg="image_view" output="screen" respawn="false">
+    <remap from="image" to="/depth_camera_left/color/image_raw"/>
+    <param name="fps" value="30"/>
+    <param name="filename" value="/home/integration/video/depth_left/mission_1/depth_left.avi"/>
+  </node>
+
+</launch>

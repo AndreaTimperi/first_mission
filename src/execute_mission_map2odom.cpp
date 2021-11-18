@@ -1,4 +1,5 @@
-#include "first_mission/execute_mission.h"
+#include "first_mission/execute_mission_map2odom.h"
+
 
 // Call back function to read the path planning stauts, set the moving flag and call the publish function
 void readCallback(const navigation_manager_msgs::LocalPlannerStatus & msg)
@@ -44,7 +45,10 @@ void publish_navgoal(std::string name)
 int main( int argc, char** argv )
 {
     // initialize ROS
-    ros::init(argc, argv, "first_mission_node");
+    ros::init(argc, argv, "first_mission_map2odom_node");
+
+    // create a Transform Listener to pass from odom to map
+    tf::TransformListener listener;
 
     // create a node
     ros::NodeHandle nh;
@@ -60,6 +64,17 @@ int main( int argc, char** argv )
             // cout << v[i] << " ";
     }
 
+    // Record transform value (rot and trasl) between odom and map
+    tf::StampedTransform transform;
+        try{
+         listener.lookupTransform("/map", "/odom",  
+                               ros::Time(0), transform);
+        }
+        catch (tf::TransformException ex){
+            ROS_ERROR("%s",ex.what());
+            ros::Duration(1.0).sleep();
+        }
+
     // IDEA DI FARE UN CICLO FOR, dove preso un GetParam - cin che settiamo in f(x) dell'area da esplorare, un Param della granularità, aggiorna le pos in modo ciclico
     
     for (int j = 0; j < 4; ++j)
@@ -68,14 +83,14 @@ int main( int argc, char** argv )
         { 
             environment_list_push["label"] = "IspectionNavigationGoal" + to_string(i)+ to_string(j);
             environment_list_push["name"] = "IspectionNavigationGoal" + to_string(i)+ to_string(j);
-            environment_list_push["pose"]["header"]["frame_id"] = "odom";
-            environment_list_push["pose"]["pose"]["orientation"]["w"] = 1.0;
-            environment_list_push["pose"]["pose"]["orientation"]["x"] = 0.0;
-            environment_list_push["pose"]["pose"]["orientation"]["y"] = 0.0;
-            environment_list_push["pose"]["pose"]["orientation"]["z"] = 0.0;
-            environment_list_push["pose"]["pose"]["position"]["x"] = 1.0 + i;
-            environment_list_push["pose"]["pose"]["position"]["y"] = 0.0 + j;
-            environment_list_push["pose"]["pose"]["position"]["z"] = 0.2;
+            environment_list_push["pose"]["header"]["frame_id"] = "map";
+            environment_list_push["pose"]["pose"]["orientation"]["w"] = 1.0 - transform.getRotation().w() ;
+            environment_list_push["pose"]["pose"]["orientation"]["x"] = 0.0 - transform.getRotation().x();
+            environment_list_push["pose"]["pose"]["orientation"]["y"] = 0.0 - transform.getRotation().y();
+            environment_list_push["pose"]["pose"]["orientation"]["z"] = 0.0 - transform.getRotation().z();
+            environment_list_push["pose"]["pose"]["position"]["x"] = transform.getOrigin().x() + 1.0 + i;
+            environment_list_push["pose"]["pose"]["position"]["y"] = transform.getOrigin().y() + 0.0 + j;
+            environment_list_push["pose"]["pose"]["position"]["z"] = transform.getOrigin().z() + 0.2;
             environment_list_push["tolerance"]["rotation"] = 0.1;
             environment_list_push["tolerance"]["translation"] = 0.05;
             environment_list_push["type"]= "navigation_goal";

@@ -1,4 +1,4 @@
-#include "first_mission/execute_mission.h"
+#include "first_mission/execute_mission_map.h"
 
 // Call back function to read the path planning stauts, set the moving flag and call the publish function
 void readCallback(const navigation_manager_msgs::LocalPlannerStatus & msg)
@@ -44,7 +44,7 @@ void publish_navgoal(std::string name)
 int main( int argc, char** argv )
 {
     // initialize ROS
-    ros::init(argc, argv, "first_mission_node");
+    ros::init(argc, argv, "first_mission_map_node");
 
     // create a node
     ros::NodeHandle nh;
@@ -68,7 +68,7 @@ int main( int argc, char** argv )
         { 
             environment_list_push["label"] = "IspectionNavigationGoal" + to_string(i)+ to_string(j);
             environment_list_push["name"] = "IspectionNavigationGoal" + to_string(i)+ to_string(j);
-            environment_list_push["pose"]["header"]["frame_id"] = "odom";
+            environment_list_push["pose"]["header"]["frame_id"] = "map";
             environment_list_push["pose"]["pose"]["orientation"]["w"] = 1.0;
             environment_list_push["pose"]["pose"]["orientation"]["x"] = 0.0;
             environment_list_push["pose"]["pose"]["orientation"]["y"] = 0.0;

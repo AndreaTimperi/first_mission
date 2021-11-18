@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+
+  <!-- Launch file starting the ANYmal C application PC software stack. -->
+  <!-- Load the configuration first before invoking this file.  -->
+
+  <!-- Application PC stack -->
+  <include file="$(find stack_launcher)/launch/stack_launcher.launch">
+    <arg name="stack"         value="apc"/>
+    <arg name="trigger_param" value="/config_loaded"/>
+  </include>
+
+  <!-- Launch camera nodes for capturing images -->
+
+  <node name="image_saver_front" type="image_saver" pkg="image_view">
+    <remap from="image" to="/depth_camera_front/color/image_raw"/>
+    <param name="save_all_image" value="false"/>
+    <param name="name"            value="image_saver_depth_front"/>
+    <param name="filename_format" value="/home/integration/photos/depth_front/mission_1/depth_front_%s.png"/>
+  </node>
+
+  <node name="image_saver_rear" type="image_saver" pkg="image_view">
+    <remap from="image" to="/depth_camera_rear/color/image_raw"/>
+    <param name="save_all_image" value="false"/>
+    <param name="name"            value="image_saver_depth_rear"/>
+    <param name="filename_format" value="/home/integration/photos/depth_rear/mission_1/depth_rear_%s.png"/>
+  </node>
+
+  <node name="image_saver_right" type="image_saver" pkg="image_view">
+    <remap from="image" to="/depth_camera_right/color/image_raw"/>
+    <param name="save_all_image" value="false"/>
+    <param name="name"            value="image_saver_depth_right"/>
+    <param name="filename_format" value="/home/integration/photos/depth_right/mission_1/depth_right_%s.png"/>
+  </node>
+
+  <node name="image_saver_left" type="image_saver" pkg="image_view">
+    <remap from="image" to="/depth_camera_left/color/image_raw"/>
+    <param name="save_all_image" value="false"/>
+    <param name="name"            value="image_saver_depth_left"/>
+    <param name="filename_format" value="/home/integration/photos/depth_left/mission_1/depth_left_%s.png"/>
+  </node>
+
+</launch>
