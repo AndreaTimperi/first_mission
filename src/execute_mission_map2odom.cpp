@@ -49,6 +49,7 @@ int main( int argc, char** argv )
 
     // create a Transform Listener to pass from odom to map
     tf::TransformListener listener;
+    tf::StampedTransform transform;
 
     // create a node
     ros::NodeHandle nh;
@@ -65,10 +66,9 @@ int main( int argc, char** argv )
     }
 
     // Record transform value (rot and trasl) between odom and map
-    tf::StampedTransform transform;
         try{
-         listener.lookupTransform("/map", "/odom",  
-                               ros::Time(0), transform);
+            listener.waitForTransform("/map", "/apriltag_0_size_18cm", ros::Time(0), ros::Duration(3.0));
+            listener.lookupTransform("/map", "/apriltag_0_size_18cm", ros::Time(0), transform);
         }
         catch (tf::TransformException ex){
             ROS_ERROR("%s",ex.what());
@@ -84,10 +84,10 @@ int main( int argc, char** argv )
             environment_list_push["label"] = "IspectionNavigationGoal" + to_string(i)+ to_string(j);
             environment_list_push["name"] = "IspectionNavigationGoal" + to_string(i)+ to_string(j);
             environment_list_push["pose"]["header"]["frame_id"] = "map";
-            environment_list_push["pose"]["pose"]["orientation"]["w"] = 1.0 - transform.getRotation().w() ;
-            environment_list_push["pose"]["pose"]["orientation"]["x"] = 0.0 - transform.getRotation().x();
-            environment_list_push["pose"]["pose"]["orientation"]["y"] = 0.0 - transform.getRotation().y();
-            environment_list_push["pose"]["pose"]["orientation"]["z"] = 0.0 - transform.getRotation().z();
+            environment_list_push["pose"]["pose"]["orientation"]["w"] = 1.0 + transform.getRotation().w() ;
+            environment_list_push["pose"]["pose"]["orientation"]["x"] = 0.0 + transform.getRotation().x();
+            environment_list_push["pose"]["pose"]["orientation"]["y"] = 0.0 + transform.getRotation().y();
+            environment_list_push["pose"]["pose"]["orientation"]["z"] = 0.0 + transform.getRotation().z();
             environment_list_push["pose"]["pose"]["position"]["x"] = transform.getOrigin().x() + 1.0 + i;
             environment_list_push["pose"]["pose"]["position"]["y"] = transform.getOrigin().y() + 0.0 + j;
             environment_list_push["pose"]["pose"]["position"]["z"] = transform.getOrigin().z() + 0.2;

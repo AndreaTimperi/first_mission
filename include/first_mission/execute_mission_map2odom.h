@@ -12,6 +12,16 @@
 #include <tf/transform_listener.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
+#include <tf2/buffer.h>
+#include <tf2/transform_listener.h>
+
+tf2_ros::Buffer buffer_;
+tf2_ros::TransformListener listener_;
+
+class Localizer
+{
+public:
+  Localizer(ros::NodeHandle& nh) : listener_(buffer_)
 
 
 using namespace std;
