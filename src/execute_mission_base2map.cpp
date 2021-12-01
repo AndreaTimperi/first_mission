@@ -1,4 +1,4 @@
-#include "first_mission/execute_mission_map2odom.h"
+#include <first_mission/execute_mission_base2map.h>
 
 
 // Call back function to read the path planning stauts, set the moving flag and call the publish function
@@ -45,11 +45,13 @@ void publish_navgoal(std::string name)
 int main( int argc, char** argv )
 {
     // initialize ROS
-    ros::init(argc, argv, "first_mission_map2odom_node");
+    ros::init(argc, argv, "first_mission_base2map_node");
 
-    // create a Transform Listener to pass from odom to map
-    tf::TransformListener listener;
-    tf::StampedTransform transform;
+    // create a Transform Samperd to pass from odom to map
+    geometry_msgs::TransformStamped transformStamped;
+
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener tfListener(tfBuffer);
 
     // create a node
     ros::NodeHandle nh;
@@ -65,37 +67,50 @@ int main( int argc, char** argv )
             // cout << v[i] << " ";
     }
 
-    // Record transform value (rot and trasl) between odom and map
-        try{
-            listener.waitForTransform("/map", "/apriltag_0_size_18cm", ros::Time(0), ros::Duration(3.0));
-            listener.lookupTransform("/map", "/apriltag_0_size_18cm", ros::Time(0), transform);
-        }
-        catch (tf::TransformException ex){
-            ROS_ERROR("%s",ex.what());
-            ros::Duration(1.0).sleep();
-        }
-
     // IDEA DI FARE UN CICLO FOR, dove preso un GetParam - cin che settiamo in f(x) dell'area da esplorare, un Param della granularità, aggiorna le pos in modo ciclico
     
-    for (int j = 0; j < 4; ++j)
+    cout << "Set the ispection area" << endl;
+    cout << "Number of rows: " << endl;
+    cin >> rows;
+    cout << "Number of columns: " << endl;
+    cin >> columns;
+
+    for (int j = 0; j < columns; ++j)
     {
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < rows; ++i)
         { 
+            // Record transform value (rot and trasl) between odom and map
+            try{
+                tfBuffer.canTransform("map", "base", ros::Time(0), ros::Duration(3.0));
+                transformStamped = tfBuffer.lookupTransform("map", "base", ros::Time(0));
+            }
+            catch (tf2::TransformException ex){
+                ROS_ERROR("%s",ex.what());
+                ros::Duration(1.0).sleep();
+            }
+
+            Eigen::Vector3d goal_position_base(1.0 + i, 0.0 + j, 0);
+            Eigen::Isometry3d base_to_map = tf2::transformToEigen(transformStamped);
+
+            Eigen::Vector3d goal_position_map = base_to_map*goal_position_base;
+
             environment_list_push["label"] = "IspectionNavigationGoal" + to_string(i)+ to_string(j);
             environment_list_push["name"] = "IspectionNavigationGoal" + to_string(i)+ to_string(j);
             environment_list_push["pose"]["header"]["frame_id"] = "map";
-            environment_list_push["pose"]["pose"]["orientation"]["w"] = 1.0 + transform.getRotation().w() ;
-            environment_list_push["pose"]["pose"]["orientation"]["x"] = 0.0 + transform.getRotation().x();
-            environment_list_push["pose"]["pose"]["orientation"]["y"] = 0.0 + transform.getRotation().y();
-            environment_list_push["pose"]["pose"]["orientation"]["z"] = 0.0 + transform.getRotation().z();
-            environment_list_push["pose"]["pose"]["position"]["x"] = transform.getOrigin().x() + 1.0 + i;
-            environment_list_push["pose"]["pose"]["position"]["y"] = transform.getOrigin().y() + 0.0 + j;
-            environment_list_push["pose"]["pose"]["position"]["z"] = transform.getOrigin().z() + 0.2;
+            environment_list_push["pose"]["pose"]["orientation"]["w"] = transformStamped.transform.rotation.w;
+            environment_list_push["pose"]["pose"]["orientation"]["x"] = transformStamped.transform.rotation.x;
+            environment_list_push["pose"]["pose"]["orientation"]["y"] = transformStamped.transform.rotation.y;
+            environment_list_push["pose"]["pose"]["orientation"]["z"] = transformStamped.transform.rotation.z;
+            environment_list_push["pose"]["pose"]["position"]["x"] = goal_position_map(0);
+            environment_list_push["pose"]["pose"]["position"]["y"] = goal_position_map(1);
+            environment_list_push["pose"]["pose"]["position"]["z"] = goal_position_map(2); // TODO controllare questo perchè se ci sono pendenza vada bene
             environment_list_push["tolerance"]["rotation"] = 0.1;
             environment_list_push["tolerance"]["translation"] = 0.05;
             environment_list_push["type"]= "navigation_goal";
-
+            
             v.push_back(environment_list_push);
+
+
             name.push_back(environment_list_push["label"]);
         }
     }
@@ -126,6 +141,9 @@ int main( int argc, char** argv )
     // Main loop to ispect iteratively the navigation goal grid
     while(ros::ok())
     {
+
+
+
     if(!moving && navgoal_num < name.size())
     {
         publish_navgoal(name.at(navgoal_num));
